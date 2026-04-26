@@ -1,0 +1,9 @@
+body { font-family: monospace; background: #0d1117; color: #c9d1d9; margin: 0; padding: 1rem; }
+header h1 { color: #58a6ff; margin: 0 0 1rem; }
+nav button { background: #21262d; color: #c9d1d9; border: 1px solid #30363d; padding: 0.4rem 0.8rem; cursor: pointer; margin-right: 0.4rem; }
+nav button:hover { background: #30363d; }
+table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+th, td { text-align: left; padding: 0.4rem 0.6rem; border-bottom: 1px solid #21262d; }
+th { color: #58a6ff; }
+button { background: #238636; color: #fff; border: none; padding: 0.2rem 0.5rem; cursor: pointer; border-radius: 3px; }
+pre { white-space: pre-wrap; font-size: 0.8rem; }
