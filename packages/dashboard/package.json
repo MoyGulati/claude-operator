@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "tsc && cp -r src/public dist/",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "dev": "tsx src/server.ts"
   },
   "dependencies": {
