@@ -1,0 +1,21 @@
+{
+  "name": "claude-operator-cli",
+  "version": "0.1.0",
+  "private": true,
+  "bin": { "claude-operator": "dist/index.js" },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "dev": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "commander": "^12.0.0",
+    "claude-operator": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.4.0",
+    "vitest": "^1.0.0"
+  }
+}
