@@ -4,7 +4,9 @@
   "description": "Autonomous multi-worker orchestrator MCP server for Claude Code",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "bin": { "claude-operator-server": "dist/server.js" },
+  "bin": {
+    "claude-operator-server": "dist/server.js"
+  },
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
@@ -12,12 +14,13 @@
     "dev": "tsx src/server.ts"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.0",
-    "better-sqlite3": "^12.9.0",
     "@huggingface/transformers": "^3.0.0",
-    "@opentelemetry/sdk-node": "^0.51.0",
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@opentelemetry/api": "^1.9.1",
     "@opentelemetry/auto-instrumentations-node": "^0.46.0",
     "@opentelemetry/exporter-trace-otlp-http": "^0.51.0",
+    "@opentelemetry/sdk-node": "^0.51.0",
+    "better-sqlite3": "^12.9.0",
     "zod": "^3.22.0"
   },
   "devDependencies": {
