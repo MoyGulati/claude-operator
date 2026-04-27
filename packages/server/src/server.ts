@@ -19,7 +19,7 @@ import { searchMemory } from './tools/search-memory.js';
 import { logJudgmentCall } from './tools/log-judgment-call.js';
 import { completeTask } from './tools/complete-task.js';
 
-const BASE_DIR = join(homedir(), '.claude-operator');
+const BASE_DIR = process.env['CLAUDE_OPERATOR_BASE_DIR'] ?? join(homedir(), '.claude-operator');
 const DB_PATH = join(BASE_DIR, 'operator.db');
 const BUS_DIR = join(BASE_DIR, 'bus');
 const LOG_PATH = join(BASE_DIR, 'logs', 'operator.jsonl');
