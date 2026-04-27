@@ -1,5 +1,5 @@
 import { Router, type Router as ExpressRouter } from 'express';
-import { readFileSync, existsSync } from 'node:fs';
+import { existsSync, statSync, openSync, readSync, closeSync } from 'node:fs';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
 
@@ -17,7 +17,14 @@ logsRouter.get('/stream', (req, res) => {
       res.write('data: []\n\n');
       return;
     }
-    const lines = readFileSync(LOG_PATH, 'utf8').trim().split('\n').slice(-500);
+    const MAX_BYTES = 65536; // read last 64KB max
+    const stat = statSync(LOG_PATH);
+    const start = Math.max(0, stat.size - MAX_BYTES);
+    const buf = Buffer.alloc(stat.size - start);
+    const fd = openSync(LOG_PATH, 'r');
+    readSync(fd, buf, 0, buf.length, start);
+    closeSync(fd);
+    const lines = buf.toString('utf8').split('\n').filter(Boolean).slice(-500);
     res.write(`data: ${JSON.stringify(lines)}\n\n`);
   }
 

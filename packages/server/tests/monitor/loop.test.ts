@@ -18,7 +18,7 @@ beforeEach(() => {
   db = openDb(join(tmpDir, 'test.db'));
   applySchema(db);
   db.prepare("INSERT INTO tasks (goal, project_path, status, retry_count) VALUES ('g', '/r', 'active', 0)").run();
-  db.prepare("INSERT INTO workers (id, task_id, type, status, last_output, worktree_path, worktree_branch) VALUES ('w1', 1, 'headless', 'running', '', '/wt', 'operator/w1')").run();
+  db.prepare("INSERT INTO workers (id, task_id, type, status, last_output, worktree_path, worktree_branch) VALUES ('w-0000aaaa', 1, 'headless', 'running', '', '/wt', 'operator/w1')").run();
 });
 afterEach(() => { db.close(); rmSync(tmpDir, { recursive: true }); });
 
@@ -26,15 +26,15 @@ describe('monitor loop tick', () => {
   it('marks worker stalled when heartbeat is missing', async () => {
     const loop = createMonitorLoop(db, busDir, { intervalMs: 100, staleThresholdMs: 1000 });
     await loop.tick();
-    const w = db.prepare("SELECT * FROM workers WHERE id = 'w1'").get() as any;
+    const w = db.prepare("SELECT * FROM workers WHERE id = 'w-0000aaaa'").get() as any;
     expect(w.status).toBe('stalled');
   });
 
   it('keeps worker running when fresh heartbeat present', async () => {
-    writeHeartbeat(busDir, 'w1', { worker_id: 'w1', status: 'running', last_output: 'ok', updated_at: new Date().toISOString() });
+    writeHeartbeat(busDir, 'w-0000aaaa', { worker_id: 'w-0000aaaa', status: 'running', last_output: 'ok', updated_at: new Date().toISOString() });
     const loop = createMonitorLoop(db, busDir, { intervalMs: 100, staleThresholdMs: 30_000 });
     await loop.tick();
-    const w = db.prepare("SELECT * FROM workers WHERE id = 'w1'").get() as any;
+    const w = db.prepare("SELECT * FROM workers WHERE id = 'w-0000aaaa'").get() as any;
     expect(w.status).toBe('running');
   });
 });

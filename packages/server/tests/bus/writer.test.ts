@@ -12,9 +12,9 @@ afterEach(() => { rmSync(busDir, { recursive: true }); });
 
 describe('bus writer', () => {
   it('writes heartbeat JSON file', () => {
-    writeHeartbeat(busDir, 'w1', { status: 'running', last_output: 'ok', worker_id: 'w1', updated_at: new Date().toISOString() });
-    const h = readHeartbeat(busDir, 'w1');
+    writeHeartbeat(busDir, 'w-0000aaaa', { status: 'running', last_output: 'ok', worker_id: 'w-0000aaaa', updated_at: new Date().toISOString() });
+    const h = readHeartbeat(busDir, 'w-0000aaaa');
     expect(h?.status).toBe('running');
-    expect(h?.worker_id).toBe('w1');
+    expect(h?.worker_id).toBe('w-0000aaaa');
   });
 });

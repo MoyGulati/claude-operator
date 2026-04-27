@@ -12,9 +12,9 @@ afterEach(() => { rmSync(busDir, { recursive: true }); });
 
 describe('inject_instruction', () => {
   it('writes instruction file to bus dir', () => {
-    writeHeartbeat(busDir, 'w1', { worker_id: 'w1', status: 'blocked', last_output: '', updated_at: new Date().toISOString() });
-    injectInstruction(busDir, { worker_id: 'w1', instruction: 'try a different approach' });
-    const instr = JSON.parse(readFileSync(join(busDir, 'w1.instruction.json'), 'utf8'));
+    writeHeartbeat(busDir, 'w-0000aaaa', { worker_id: 'w-0000aaaa', status: 'blocked', last_output: '', updated_at: new Date().toISOString() });
+    injectInstruction(busDir, { worker_id: 'w-0000aaaa', instruction: 'try a different approach' });
+    const instr = JSON.parse(readFileSync(join(busDir, 'w-0000aaaa.instruction.json'), 'utf8'));
     expect(instr.instruction).toBe('try a different approach');
     expect(typeof instr.sent_at).toBe('string');
   });

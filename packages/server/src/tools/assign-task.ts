@@ -10,6 +10,8 @@ interface AssignTaskInput {
 export function assignTask(db: Database.Database, input: AssignTaskInput): { id: number } {
   if (!input.project_path) throw new Error('project_path is required');
   if (!input.goal) throw new Error('goal is required');
+  if (!input.project_path.startsWith('/')) throw new Error('project_path must be absolute');
+  if (input.goal.length > 4000) throw new Error('goal exceeds 4000 character limit');
 
   const result = db.prepare(
     "INSERT INTO tasks (goal, project_path, status, retry_count) VALUES (?, ?, 'pending', 0)"

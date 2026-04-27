@@ -11,6 +11,9 @@ interface SpawnWorkerInput {
 }
 
 export function spawnWorker(db: Database.Database, busDir: string, input: SpawnWorkerInput): { worker_id: string } {
+  if (input.allowed_tools && !/^[a-zA-Z0-9_,*() ]+$/.test(input.allowed_tools)) {
+    throw new Error('allowed_tools contains invalid characters');
+  }
   const task = db.prepare('SELECT * FROM tasks WHERE id = ?').get(input.task_id) as any;
   if (!task) throw new Error(`Task ${input.task_id} not found`);
 

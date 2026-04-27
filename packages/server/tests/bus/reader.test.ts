@@ -17,14 +17,14 @@ describe('bus reader', () => {
 
   it('detects stale heartbeat (>30s old)', () => {
     const oldTime = new Date(Date.now() - 35_000).toISOString();
-    writeHeartbeat(busDir, 'w2', { status: 'running', last_output: '', worker_id: 'w2', updated_at: oldTime });
-    const h = readHeartbeat(busDir, 'w2')!;
+    writeHeartbeat(busDir, 'w-0000bbbb', { status: 'running', last_output: '', worker_id: 'w-0000bbbb', updated_at: oldTime });
+    const h = readHeartbeat(busDir, 'w-0000bbbb')!;
     expect(isStale(h, 30_000)).toBe(true);
   });
 
   it('fresh heartbeat is not stale', () => {
-    writeHeartbeat(busDir, 'w3', { status: 'running', last_output: '', worker_id: 'w3', updated_at: new Date().toISOString() });
-    const h = readHeartbeat(busDir, 'w3')!;
+    writeHeartbeat(busDir, 'w-0000cccc', { status: 'running', last_output: '', worker_id: 'w-0000cccc', updated_at: new Date().toISOString() });
+    const h = readHeartbeat(busDir, 'w-0000cccc')!;
     expect(isStale(h, 30_000)).toBe(false);
   });
 });

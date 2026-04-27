@@ -1,26 +1,24 @@
-import { execSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
+
+function git(args: string[], cwd: string): void {
+  const result = spawnSync('git', args, { cwd, stdio: 'pipe' });
+  if (result.status !== 0) {
+    throw new Error(result.stderr?.toString() ?? `git ${args[0]} failed`);
+  }
+}
 
 export function addWorktree(projectPath: string, workerId: string): string {
   const branch = `operator/${workerId}`;
   const wtPath = join(projectPath, '.worktrees', workerId);
-  execSync(`git worktree add "${wtPath}" -b "${branch}"`, {
-    cwd: projectPath,
-    stdio: 'pipe',
-  });
+  git(['worktree', 'add', wtPath, '-b', branch], projectPath);
   return wtPath;
 }
 
 export function removeWorktree(projectPath: string, worktreePath: string): void {
-  execSync(`git worktree remove "${worktreePath}" --force`, {
-    cwd: projectPath,
-    stdio: 'pipe',
-  });
+  git(['worktree', 'remove', worktreePath, '--force'], projectPath);
 }
 
 export function mergeWorktreeBranch(projectPath: string, branch: string): void {
-  execSync(`git merge "${branch}" --no-ff -m "chore: merge worker branch ${branch}"`, {
-    cwd: projectPath,
-    stdio: 'pipe',
-  });
+  git(['merge', branch, '--no-ff', '-m', `chore: merge worker branch ${branch}`], projectPath);
 }
