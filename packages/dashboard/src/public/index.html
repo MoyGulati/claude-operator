@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>claude-operator</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header><h1>claude-operator</h1></header>
+  <nav>
+    <button onclick="showTab('tasks')">Tasks</button>
+    <button onclick="showTab('workers')">Workers</button>
+    <button onclick="showTab('guardrails')">Guardrails</button>
+    <button onclick="showTab('memory')">Memory</button>
+    <button onclick="showTab('judgment-calls')">Judgment Calls</button>
+    <button onclick="showTab('logs')">Logs</button>
+  </nav>
+  <main>
+    <section id="tab-tasks"></section>
+    <section id="tab-workers" hidden></section>
+    <section id="tab-guardrails" hidden></section>
+    <section id="tab-memory" hidden></section>
+    <section id="tab-judgment-calls" hidden></section>
+    <section id="tab-logs" hidden><pre id="log-output"></pre></section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

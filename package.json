@@ -1,0 +1,15 @@
+{
+  "name": "claude-operator-root",
+  "private": true,
+  "scripts": {
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["better-sqlite3", "esbuild", "onnxruntime-node", "protobufjs", "sharp"]
+  }
+}
