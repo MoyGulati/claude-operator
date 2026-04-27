@@ -23,6 +23,13 @@
     "better-sqlite3": "^12.9.0",
     "zod": "^3.22.0"
   },
+  "files": [
+    "dist/",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20.0.0",

@@ -1,0 +1,58 @@
+[
+  {
+    "key": "stack/language",
+    "value": "TypeScript always — never plain JavaScript",
+    "tier": 2,
+    "confidence": 1.0,
+    "tags": ["stack", "language"]
+  },
+  {
+    "key": "stack/package-manager",
+    "value": "pnpm for monorepos, npm for single-package projects",
+    "tier": 2,
+    "confidence": 1.0,
+    "tags": ["stack", "tooling"]
+  },
+  {
+    "key": "stack/test-runner",
+    "value": "vitest for TypeScript projects, pytest for Python",
+    "tier": 2,
+    "confidence": 1.0,
+    "tags": ["stack", "testing"]
+  },
+  {
+    "key": "convention/done-means",
+    "value": "./verify.sh exits 0. No verify.sh = produce explicit verification step.",
+    "tier": 2,
+    "confidence": 1.0,
+    "tags": ["convention", "workflow"]
+  },
+  {
+    "key": "convention/commit-message",
+    "value": "Always include 'closes #N' referencing the GitHub issue. Build must pass before commit.",
+    "tier": 2,
+    "confidence": 1.0,
+    "tags": ["convention", "git"]
+  },
+  {
+    "key": "convention/secrets",
+    "value": "Secrets in macOS Keychain only. Never .env committed to git, never in CLAUDE.md, comments, or logs.",
+    "tier": 2,
+    "confidence": 1.0,
+    "tags": ["security", "convention"]
+  },
+  {
+    "key": "pattern/better-sqlite3-node24",
+    "value": "better-sqlite3 v12+ required for Node v24. v9.x native build fails with make exit code 2.",
+    "tier": 1,
+    "confidence": 0.95,
+    "tags": ["pattern", "sqlite", "node"]
+  },
+  {
+    "key": "pattern/pnpm-native-builds",
+    "value": "pnpm v10 native build approval: set pnpm.onlyBuiltDependencies in root package.json. approve-builds is interactive.",
+    "tier": 1,
+    "confidence": 0.95,
+    "tags": ["pattern", "pnpm", "build"]
+  }
+]

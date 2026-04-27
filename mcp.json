@@ -1,0 +1,53 @@
+{
+  "name": "claude-operator",
+  "version": "0.1.0",
+  "description": "Autonomous multi-worker orchestrator MCP server for Claude Code — decomposes goals, spawns workers, manages two-tier memory, enforces guardrails.",
+  "homepage": "https://github.com/MoyGulati/claude-operator",
+  "license": "MIT",
+  "server": {
+    "command": "claude-operator",
+    "args": ["start", "--mcp"]
+  },
+  "tools": [
+    {
+      "name": "assign_task",
+      "description": "Create a task with goal, project path, priority, and constraints"
+    },
+    {
+      "name": "spawn_worker",
+      "description": "Launch a Claude Code worker (named or headless) on an isolated git worktree"
+    },
+    {
+      "name": "get_worker_status",
+      "description": "Poll worker state, heartbeat age, and current task"
+    },
+    {
+      "name": "complete_task",
+      "description": "Mark a task done, merge the worktree branch, and clean up"
+    },
+    {
+      "name": "search_memory",
+      "description": "FTS5 full-text search across operator memory"
+    },
+    {
+      "name": "update_memory",
+      "description": "Write or update a memory entry with tier and confidence score"
+    },
+    {
+      "name": "set_guardrail",
+      "description": "Add or update a guardrail rule"
+    },
+    {
+      "name": "get_guardrails",
+      "description": "List all active guardrail rules"
+    },
+    {
+      "name": "inject_instruction",
+      "description": "Send an instruction to a running worker via file bus"
+    },
+    {
+      "name": "log_judgment_call",
+      "description": "Record a human judgment call for retrospective learning"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+[
+  {
+    "name": "no-force-push",
+    "rule": "Never run git push --force or git push -f on any branch",
+    "severity": "block"
+  },
+  {
+    "name": "no-main-direct-commit",
+    "rule": "Never commit directly to main or master branch — always use a feature branch",
+    "severity": "block"
+  },
+  {
+    "name": "no-secrets-in-files",
+    "rule": "Never write API keys, tokens, or passwords to any file. Secrets live in macOS Keychain only.",
+    "severity": "block"
+  },
+  {
+    "name": "test-before-commit",
+    "rule": "Run ./verify.sh (or npm test / pnpm test) before every git commit. Do not commit if tests fail.",
+    "severity": "warn"
+  },
+  {
+    "name": "no-rm-rf",
+    "rule": "Never run rm -rf on paths outside the current project directory",
+    "severity": "block"
+  },
+  {
+    "name": "one-issue-at-a-time",
+    "rule": "Work on one GitHub issue at a time, in ascending order. Close the current issue before starting the next.",
+    "severity": "warn"
+  }
+]
