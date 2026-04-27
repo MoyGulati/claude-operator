@@ -1,6 +1,6 @@
 {
   "name": "claude-operator",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Autonomous multi-worker orchestrator MCP server for Claude Code",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
