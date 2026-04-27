@@ -2,7 +2,7 @@
   "name": "claude-operator-root",
   "private": true,
   "scripts": {
-    "build": "pnpm -r build",
+    "build": "pnpm --filter claude-operator build:ts && pnpm --filter claude-operator-dashboard build && rm -rf packages/server/dist/dashboard && cp -r packages/dashboard/dist packages/server/dist/dashboard && pnpm --filter claude-operator build:postbuild && pnpm --filter claude-operator-cli build",
     "test": "pnpm -r test",
     "lint": "pnpm -r lint"
   },

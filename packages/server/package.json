@@ -8,7 +8,9 @@
     "claude-operator-server": "dist/server.js"
   },
   "scripts": {
-    "build": "tsc && printf '#!/usr/bin/env node\n' | cat - dist/server.js > /tmp/server.js.tmp && mv /tmp/server.js.tmp dist/server.js && chmod +x dist/server.js",
+    "build:ts": "tsc",
+    "build:postbuild": "printf '#!/usr/bin/env node\\n' | cat - dist/server.js > /tmp/server.js.tmp && mv /tmp/server.js.tmp dist/server.js && chmod +x dist/server.js",
+    "build": "pnpm run build:ts && pnpm run build:postbuild",
     "test": "vitest run",
     "test:watch": "vitest",
     "dev": "tsx src/server.ts"
