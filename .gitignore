@@ -5,3 +5,4 @@ dist/
 .npmrc
 pnpm.json
 docs/superpowers/plans/
+.worktrees
