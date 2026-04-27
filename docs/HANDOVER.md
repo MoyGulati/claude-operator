@@ -1,64 +1,55 @@
 # Handover — 2026-04-26
 
 ## Session Summary
-Ran end-to-end smoke test of `claude-operator init` + `claude-operator start` + MCP server JSON-RPC. Fixed two bugs found during smoke test: server bin missing shebang (ENOEXEC), and `start.ts` resolving dashboard via wrong package path. Ran brainstorming + writing-plans for three remaining tasks (dashboard packaging, E2E MCP test, GitHub Actions CI). Implementation plan written and approved.
+Executed all 6 tasks from the packaging/E2E/CI implementation plan via subagent-driven development. Dashboard is now bundled into the server package at build time, `CLAUDE_OPERATOR_BASE_DIR` env var added for test isolation, dashboard resolve path fixed in CLI, 3 E2E MCP integration tests added (42 total), GitHub Actions CI created. Published `claude-operator@0.1.2` to npm and pushed to GitHub.
 
 ## Git State
 - Branch: `main`
 - Uncommitted changes: none — clean
 - Last 5 commits:
-  - `4f97a33` docs: add packaging/e2e/ci design spec
-  - `b587b04` fix: add shebang to server bin, fix dashboard path resolution in start cmd
-  - `91cfbe3` docs: update handover and working context for v0.1.1
-  - `cb81560` chore: bump version to 0.1.1
-  - `cab855c` fix: security hardening — shell injection, path traversal, auth, log read
+  - `9db997e` chore: bump version to 0.1.2
+  - `419ecc3` feat: dashboard packaging, E2E MCP test, GitHub Actions CI (merge commit)
+  - `506e2fd` ci: GitHub Actions — build all packages + test server on push/PR to main
+  - `52c955c` test: E2E MCP integration — initialize, assign_task, spawn_worker over stdio
+  - `679c420` fix: dashboard resolve via server package dist/dashboard not separate package
 
 ## Active Problem
-No active problem. Smoke test passed. Plan written. Ready to execute 6-task implementation plan.
+No active problem — session ended cleanly. All 6 plan tasks complete, verify.sh passes, npm published.
 
 ## Files Touched This Session
-- `packages/server/package.json` — added `build:ts` / `build:postbuild` split + shebang postbuild script
-- `packages/cli/src/commands/start.ts` — fixed dashboard resolve: now `dist/dashboard/server.js` inside server package (broken `..claude-operator-dashboard` path removed)
-- `docs/superpowers/specs/2026-04-26-packaging-e2e-ci-design.md` — design doc (committed)
-- `docs/superpowers/plans/2026-04-26-packaging-e2e-ci.md` — implementation plan (gitignored, local only)
+- `package.json` (root) — explicit build order: server:ts → dashboard → rm/cp dashboard dist → server:postbuild → cli
+- `packages/server/package.json` — split `build` into `build:ts` + `build:postbuild` + `build`; bumped to 0.1.2
+- `packages/server/src/server.ts` — `BASE_DIR` now reads `CLAUDE_OPERATOR_BASE_DIR` env var with fallback to `~/.claude-operator`
+- `packages/cli/src/commands/start.ts` — fixed `dashboardBin` to `join(serverPkgDir, 'dist', 'dashboard', 'server.js')`
+- `packages/server/tests/e2e/mcp-flow.test.ts` — created; JSON-RPC E2E: initialize + assign_task + spawn_worker(named)
+- `.github/workflows/ci.yml` — created; push/PR CI with explicit build order + server tests
+- `.gitignore` — added `.worktrees`
 
 ## Failed Approaches
-- `npm install -g .` from workspace root — installs the monorepo root (no bin), not the CLI. Must `cd packages/cli && npm install -g .`
-- `start.ts` using `require.resolve('claude-operator-dashboard/...')` — fails outside pnpm workspace (dashboard is `private: true`, not published). Must resolve via server package path.
-- `require.resolve('claude-operator/dist/server.js').replace(...) + '/../claude-operator-dashboard/dist/server.js'` — wrong path after bundle; correct is `join(serverPkgDir, 'dist', 'dashboard', 'server.js')`
+- `cp -r packages/dashboard/dist packages/server/dist/dashboard` without prior `rm -rf` — nests on incremental builds (caught by code quality review, fixed to `rm -rf ... && cp -r ...`)
 
-## Learned Patterns
-- [High confidence] Server bin (`dist/server.js`) needs `#!/usr/bin/env node` shebang — tsc strips it if in source, so postbuild step: `printf '#!/usr/bin/env node\n' | cat - dist/server.js > tmp && mv tmp dist/server.js && chmod +x`.
-- [High confidence] `pnpm -r build` topological order is: dashboard (depends on server) → server. To bundle dashboard INTO server, must split server build into `build:ts` (tsc only) and `build:postbuild` (shebang/chmod), with explicit root build order: `server:ts → dashboard → copy → server:postbuild → cli`.
-- [High confidence] `spawn_worker` with `type: 'named'` skips `claude` invocation — safe for E2E tests. `type: 'headless'` would try to spawn `claude` (ENOENT in CI).
-- [High confidence] MCP server responds correctly to `initialize` + `tools/call` JSON-RPC over stdio — verified by piping newline-delimited JSON to node process.
+## Learned Patterns (carry forward)
+- [High confidence] Root build uses `rm -rf packages/server/dist/dashboard` before `cp -r` — prevents nested `dist/dist/` on incremental builds
+- [High confidence] E2E tests use `spawn_worker` with `type: 'named'` to skip real `claude` invocation — safe in CI (no ENOENT)
+- [High confidence] `CLAUDE_OPERATOR_BASE_DIR` env var redirects DB to tmpdir in E2E tests — pattern in `mcp-flow.test.ts:25`
+- [High confidence] Worktree reviewer subagents must use full absolute path `.worktrees/feature/<name>` — not `.worktrees/feature-<name>` (gitdir naming differs)
 
 ## Next Steps (ordered by dependency)
+Project is in a clean, publishable state. Possible next work:
 
-Plan at: `docs/superpowers/plans/2026-04-26-packaging-e2e-ci.md` (local)
-Chosen execution: **Subagent-Driven (superpowers:subagent-driven-development)**
-
-Tasks in order:
-1. **Task 1 — Split server build + root build order**
-   - `package.json` (root): explicit `--filter` build order
-   - `packages/server/package.json`: `build:ts` + `build:postbuild` + `build`
-2. **Task 2 — CLAUDE_OPERATOR_BASE_DIR env var**
-   - `packages/server/src/server.ts:22`: `process.env['CLAUDE_OPERATOR_BASE_DIR'] ?? join(homedir(), '.claude-operator')`
-3. **Task 3 — Fix start.ts dashboard resolve**
-   - `packages/cli/src/commands/start.ts:26`: `join(serverPkgDir, 'dist', 'dashboard', 'server.js')`
-4. **Task 4 — E2E MCP integration test**
-   - Create `packages/server/tests/e2e/mcp-flow.test.ts` (JSON-RPC over stdio, 3 tests)
-5. **Task 5 — GitHub Actions CI**
-   - Create `.github/workflows/ci.yml`
-6. **Task 6 — Final verify + push**
-   - `./verify.sh` exits 0, push to origin, CI goes green
+1. **CLI package — make public** — `packages/cli/package.json`: remove `private: true`, publish as `claude-operator-cli@0.1.0`
+2. **README.md** — write usage docs: install, MCP config, `claude-operator init/start/status/retro` commands
+3. **npm release notes / CHANGELOG** — document v0.1.2 changes
+4. **CI badge in README** — add GitHub Actions badge after first CI run succeeds
 
 ## Environment Notes
 - Node v24.13.0, pnpm v10.33.2
-- Global bins: `claude-operator` (CLI) + `claude-operator-server` (MCP server) at `/Users/am/.nvm/versions/node/v24.13.0/bin/`
-- Server uses `~/.claude-operator/operator.db` by default; override with `CLAUDE_OPERATOR_BASE_DIR` env var (Task 2 adds this)
-- `./verify.sh` = `pnpm build && pnpm test` — 39 tests currently, 42 after Task 4
-- Dashboard `packages/dashboard` stays `private: true` — not published, bundled into server at build time
+- Published: `claude-operator@0.1.2` on npm (server + bundled dashboard)
+- `claude-operator-cli` and `claude-operator-dashboard` are `private: true` — not published
+- Server bin: `claude-operator-server` at `dist/server.js`
+- Default DB: `~/.claude-operator/operator.db`; override with `CLAUDE_OPERATOR_BASE_DIR`
+- `./verify.sh` = `pnpm build && pnpm test` — 42 tests (19 files)
+- CI: `.github/workflows/ci.yml` wired to push/PR on main
 
 ## Resume command
 From **any directory**, run `claude` then paste:
