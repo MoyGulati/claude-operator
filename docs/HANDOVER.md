@@ -1,63 +1,64 @@
-# Handover — 2026-04-27
+# Handover — 2026-04-26
 
 ## Session Summary
-Completed all v1 ship tasks: cleaned artifacts, wrote README, merged feat/implementation → main, added npm publish prep + mcp.json marketplace listing + examples. Published claude-operator@0.1.0 to npm. Then ran full security review — found 6 issues (1 CRITICAL shell injection, 2 HIGH, 1 MEDIUM, 2 LOW) — all fixed and published as claude-operator@0.1.1.
+Ran end-to-end smoke test of `claude-operator init` + `claude-operator start` + MCP server JSON-RPC. Fixed two bugs found during smoke test: server bin missing shebang (ENOEXEC), and `start.ts` resolving dashboard via wrong package path. Ran brainstorming + writing-plans for three remaining tasks (dashboard packaging, E2E MCP test, GitHub Actions CI). Implementation plan written and approved.
 
 ## Git State
 - Branch: `main`
 - Uncommitted changes: none — clean
 - Last 5 commits:
+  - `4f97a33` docs: add packaging/e2e/ci design spec
+  - `b587b04` fix: add shebang to server bin, fix dashboard path resolution in start cmd
+  - `91cfbe3` docs: update handover and working context for v0.1.1
   - `cb81560` chore: bump version to 0.1.1
   - `cab855c` fix: security hardening — shell injection, path traversal, auth, log read
-  - `1ab9f75` chore: npm publish prep, mcp.json marketplace listing, examples
-  - `55fb53b` chore: merge feat/implementation — full claude-operator v1
-  - `3612ec3` docs: add README and gitignore cleanup artifacts
 
 ## Active Problem
-No active problem — session ended cleanly. v1.1 published and pushed.
+No active problem. Smoke test passed. Plan written. Ready to execute 6-task implementation plan.
 
 ## Files Touched This Session
-- `.gitignore` — added `.npmrc`, `pnpm.json`, `docs/superpowers/plans/`
-- `README.md` — created: install story, architecture diagram, tool reference table
-- `packages/server/package.json` — added `files[]` + `publishConfig.access=public`, version bumped to 0.1.1
-- `mcp.json` — created: MCP marketplace listing at repo root (10 tools)
-- `examples/guardrails-starter.json` — 6 default guardrail rules
-- `examples/memory-seeds.json` — 8 memory seeds (stack conventions + learned patterns)
-- `packages/server/src/worktree/manager.ts` — CRITICAL fix: `execSync` shell strings → `spawnSync` args arrays
-- `packages/server/src/bus/writer.ts` — HIGH fix: `worker_id` validated against `/^w-[0-9a-f]{8}$/`
-- `packages/server/src/tools/inject-instruction.ts` — HIGH fix: same `worker_id` validation
-- `packages/dashboard/src/server.ts` — HIGH fix: bind `127.0.0.1`, `OPERATOR_TOKEN` middleware for writes
-- `packages/dashboard/src/routes/logs.ts` — MEDIUM fix: read last 64KB via fd seek, not full file
-- `packages/server/src/tools/assign-task.ts` — LOW fix: absolute path validation, goal length cap
-- `packages/server/src/tools/spawn-worker.ts` — LOW fix: `allowed_tools` character whitelist
-- `packages/server/tests/**` — updated worker ID fixtures from `w1`/`w2`/`w3` to valid `w-[0-9a-f]{8}` format
+- `packages/server/package.json` — added `build:ts` / `build:postbuild` split + shebang postbuild script
+- `packages/cli/src/commands/start.ts` — fixed dashboard resolve: now `dist/dashboard/server.js` inside server package (broken `..claude-operator-dashboard` path removed)
+- `docs/superpowers/specs/2026-04-26-packaging-e2e-ci-design.md` — design doc (committed)
+- `docs/superpowers/plans/2026-04-26-packaging-e2e-ci.md` — implementation plan (gitignored, local only)
 
 ## Failed Approaches
-- `gh repo create --source --push` (combined flags) — silently failed twice. Fix: create repo first, then add remote + push separately.
-- `npm login` as background task — spawns interactive TTY, fails in tool. `npm whoami` is the correct check.
+- `npm install -g .` from workspace root — installs the monorepo root (no bin), not the CLI. Must `cd packages/cli && npm install -g .`
+- `start.ts` using `require.resolve('claude-operator-dashboard/...')` — fails outside pnpm workspace (dashboard is `private: true`, not published). Must resolve via server package path.
+- `require.resolve('claude-operator/dist/server.js').replace(...) + '/../claude-operator-dashboard/dist/server.js'` — wrong path after bundle; correct is `join(serverPkgDir, 'dist', 'dashboard', 'server.js')`
 
 ## Learned Patterns
-- [High confidence] `gh repo create MoyGulati/name --public` (no `--source`) → then `git remote add origin` + `git push -u origin main`. Combined `--source --push` silently no-ops in this gh version.
-- [High confidence] npm automation tokens bypass 2FA for publish — create at npmjs.com → Access Tokens → Granular → Read+Write. Needed for CI/scripted publish.
-- [High confidence] `execSync` with shell string interpolation = shell injection risk even when args look safe. Always use `spawnSync` with args array for git/shell commands taking user-supplied paths.
-- [High confidence] `join(dir, userInput + '.json')` does NOT sanitize `..` — validate input format before constructing file paths.
-- [High confidence] Express dashboard should always bind `127.0.0.1` explicitly, not `0.0.0.0` default, for local-only tools.
+- [High confidence] Server bin (`dist/server.js`) needs `#!/usr/bin/env node` shebang — tsc strips it if in source, so postbuild step: `printf '#!/usr/bin/env node\n' | cat - dist/server.js > tmp && mv tmp dist/server.js && chmod +x`.
+- [High confidence] `pnpm -r build` topological order is: dashboard (depends on server) → server. To bundle dashboard INTO server, must split server build into `build:ts` (tsc only) and `build:postbuild` (shebang/chmod), with explicit root build order: `server:ts → dashboard → copy → server:postbuild → cli`.
+- [High confidence] `spawn_worker` with `type: 'named'` skips `claude` invocation — safe for E2E tests. `type: 'headless'` would try to spawn `claude` (ENOENT in CI).
+- [High confidence] MCP server responds correctly to `initialize` + `tools/call` JSON-RPC over stdio — verified by piping newline-delimited JSON to node process.
 
 ## Next Steps (ordered by dependency)
-1. **End-to-end smoke test** — `npm install -g claude-operator && claude-operator init && claude-operator start`, verify dashboard loads at :7373, wire into Claude Code settings.json, run one real `assign_task` → `spawn_worker` cycle
-2. **sqlite-vec hybrid search** (v2) — add `@huggingface/transformers` Xenova/all-MiniLM-L6-v2 embeddings alongside FTS5; store in `embedding BLOB` columns already in schema
-3. **Dashboard auth UX** — `OPERATOR_TOKEN` is set via env var; add a note to README + `claude-operator init` output explaining how to set it
-4. **CLI binary in server package** — `packages/cli` is a separate package but `claude-operator` bin is in `packages/server`. Decide: merge CLI into server package, or publish CLI as separate `claude-operator` bin that shells out to server.
-5. **GitHub Actions CI** — `pnpm build && pnpm test` on push to main
+
+Plan at: `docs/superpowers/plans/2026-04-26-packaging-e2e-ci.md` (local)
+Chosen execution: **Subagent-Driven (superpowers:subagent-driven-development)**
+
+Tasks in order:
+1. **Task 1 — Split server build + root build order**
+   - `package.json` (root): explicit `--filter` build order
+   - `packages/server/package.json`: `build:ts` + `build:postbuild` + `build`
+2. **Task 2 — CLAUDE_OPERATOR_BASE_DIR env var**
+   - `packages/server/src/server.ts:22`: `process.env['CLAUDE_OPERATOR_BASE_DIR'] ?? join(homedir(), '.claude-operator')`
+3. **Task 3 — Fix start.ts dashboard resolve**
+   - `packages/cli/src/commands/start.ts:26`: `join(serverPkgDir, 'dist', 'dashboard', 'server.js')`
+4. **Task 4 — E2E MCP integration test**
+   - Create `packages/server/tests/e2e/mcp-flow.test.ts` (JSON-RPC over stdio, 3 tests)
+5. **Task 5 — GitHub Actions CI**
+   - Create `.github/workflows/ci.yml`
+6. **Task 6 — Final verify + push**
+   - `./verify.sh` exits 0, push to origin, CI goes green
 
 ## Environment Notes
-- Node v24.13.0 — requires better-sqlite3 ^12.9.0
-- pnpm v10.33.2 globally installed
-- npm user: `moygulati` (logged in via automation token)
-- GitHub: `MoyGulati/claude-operator` — remote set, main pushed
-- npm: `claude-operator@0.1.1` published public
-- `OPERATOR_TOKEN` env var — if set, dashboard write endpoints require `x-operator-token` header matching it; if unset, writes are open (localhost-only binding still applies)
-- `./verify.sh` = `pnpm build && pnpm test` across all 3 packages — 39 tests, exits 0
+- Node v24.13.0, pnpm v10.33.2
+- Global bins: `claude-operator` (CLI) + `claude-operator-server` (MCP server) at `/Users/am/.nvm/versions/node/v24.13.0/bin/`
+- Server uses `~/.claude-operator/operator.db` by default; override with `CLAUDE_OPERATOR_BASE_DIR` env var (Task 2 adds this)
+- `./verify.sh` = `pnpm build && pnpm test` — 39 tests currently, 42 after Task 4
+- Dashboard `packages/dashboard` stays `private: true` — not published, bundled into server at build time
 
 ## Resume command
 From **any directory**, run `claude` then paste:
