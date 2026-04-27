@@ -23,7 +23,7 @@ export function runStart(): void {
   let dashboardStarted = false;
   try {
     const serverPkgDir = require.resolve('claude-operator/dist/server.js').replace(/\/dist\/server\.js$/, '');
-    const dashboardBin = join(serverPkgDir, '..', 'claude-operator-dashboard', 'dist', 'server.js');
+    const dashboardBin = join(serverPkgDir, 'dist', 'dashboard', 'server.js');
     const dashboard = spawn(process.execPath, [dashboardBin], {
       detached: true,
       stdio: 'ignore',
