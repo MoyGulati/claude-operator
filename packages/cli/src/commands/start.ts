@@ -19,14 +19,26 @@ export function runStart(): void {
     writeFileSync(PID_PATH, String(server.pid), 'utf8');
   }
 
-  const dashboardBin = require.resolve('claude-operator-dashboard/dist/server.js');
-  const dashboard = spawn(process.execPath, [dashboardBin], {
-    detached: true,
-    stdio: 'ignore',
-    env: { ...process.env },
-  });
-  dashboard.unref();
+  // Resolve dashboard relative to the claude-operator server package install
+  let dashboardStarted = false;
+  try {
+    const serverPkgDir = require.resolve('claude-operator/dist/server.js').replace(/\/dist\/server\.js$/, '');
+    const dashboardBin = join(serverPkgDir, '..', 'claude-operator-dashboard', 'dist', 'server.js');
+    const dashboard = spawn(process.execPath, [dashboardBin], {
+      detached: true,
+      stdio: 'ignore',
+      env: { ...process.env },
+    });
+    dashboard.unref();
+    dashboardStarted = true;
+  } catch {
+    // dashboard not found — MCP server still works
+  }
 
   console.log(`MCP server PID: ${server.pid ?? 'unknown'}`);
-  console.log('Dashboard: http://localhost:7373');
+  if (dashboardStarted) {
+    console.log('Dashboard: http://localhost:7373');
+  } else {
+    console.log('Dashboard not found — install claude-operator-dashboard globally to enable.');
+  }
 }
