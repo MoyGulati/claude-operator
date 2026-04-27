@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build server (TypeScript)
+        run: pnpm --filter claude-operator build:ts
+
+      - name: Build dashboard
+        run: pnpm --filter claude-operator-dashboard build
+
+      - name: Bundle dashboard into server package
+        run: rm -rf packages/server/dist/dashboard && cp -r packages/dashboard/dist packages/server/dist/dashboard
+
+      - name: Server postbuild (shebang + chmod)
+        run: pnpm --filter claude-operator build:postbuild
+
+      - name: Build CLI
+        run: pnpm --filter claude-operator-cli build
+
+      - name: Test
+        run: pnpm --filter claude-operator test
