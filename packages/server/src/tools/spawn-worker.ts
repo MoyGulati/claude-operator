@@ -30,7 +30,10 @@ export function spawnWorker(db: Database.Database, busDir: string, input: SpawnW
   let pid: number | null = null;
 
   if (input.type === 'headless') {
-    const child = spawn('claude', [
+    // The binary is overridable so this is testable without the real CLI on
+    // PATH. Default unchanged, so production behaviour is identical.
+    const claudeBin = process.env.CLAUDE_OPERATOR_CLAUDE_BIN ?? 'claude';
+    const child = spawn(claudeBin, [
       '-p', task.goal,
       '--allowedTools', input.allowed_tools,
       '--output-format', 'stream-json',
@@ -43,6 +46,19 @@ export function spawnWorker(db: Database.Database, busDir: string, input: SpawnW
         CLAUDE_OPERATOR_BUS_DIR: busDir,
         CLAUDE_OPERATOR_WORKER_ID: workerId,
       },
+    });
+    // Without this, a missing/unspawnable binary surfaces as an UNHANDLED
+
+    // error rather than a handled one. On a machine without the CLI on PATH
+
+    // that failed a CI run in which all 42 tests passed, and the message
+
+    // named no cause. `stdio: 'ignore'` means this is the only channel.
+
+    child.on('error', (err) => {
+
+      console.error(`[spawn-worker] failed to spawn "${claudeBin}": ${err.message}`);
+
     });
     child.unref();
     pid = child.pid ?? null;
