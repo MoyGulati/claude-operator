@@ -12,12 +12,31 @@ let baseDir: string;
 let idCounter = 0;
 const pending = new Map<number, (r: unknown) => void>();
 
+// Rejects rather than hanging. Previously this returned a promise with no
+// rejection path and no timeout, and the spawned server had no error handler —
+// so ANY failure (a missing dist/server.js, a crash on boot, a malformed
+// handshake) presented identically as vitest's opaque
+// "Hook timed out in 15000ms", with nothing said about the cause. A test that
+// can only ever hang cannot tell you why it failed.
 function sendRpc(method: string, params: unknown): Promise<unknown> {
   const id = ++idCounter;
-  return new Promise((resolve) => {
-    pending.set(id, resolve);
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      pending.delete(id);
+      reject(new Error(`RPC "${method}" (id ${id}) got no response in 10s. ${stderrTail()}`));
+    }, 10_000);
+    pending.set(id, (r) => {
+      clearTimeout(timer);
+      resolve(r);
+    });
     proc.stdin.write(JSON.stringify({ jsonrpc: '2.0', id, method, params }) + '\n');
   });
+}
+
+let stderrBuf = '';
+function stderrTail(): string {
+  const t = stderrBuf.trim().split('\n').slice(-5).join(' | ');
+  return t ? `server stderr: ${t}` : 'server produced no stderr.';
 }
 
 beforeAll(async () => {
@@ -27,6 +46,19 @@ beforeAll(async () => {
     env: { ...process.env, CLAUDE_OPERATOR_BASE_DIR: baseDir },
     stdio: ['pipe', 'pipe', 'pipe'],
   }) as ChildProcessWithoutNullStreams;
+
+  // Without these, a server that fails to start is silent and the hook simply
+  // times out. dist/server.js is a BUILD ARTIFACT — if the build steps did not
+  // run, spawn fails here with a clear message instead of a mystery.
+  proc.on('error', (err) => {
+    stderrBuf += `\n[spawn error] ${err.message}`;
+  });
+  proc.stderr.on('data', (d) => {
+    stderrBuf += String(d);
+  });
+  proc.on('exit', (code, signal) => {
+    stderrBuf += `\n[server exited early] code=${code} signal=${signal}`;
+  });
 
   const rl = createInterface({ input: proc.stdout });
   rl.on('line', (line) => {
